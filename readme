@@ -1,0 +1,9 @@
+ArduRGBLamp
+
+Control a rgb led with a ajax color picker. This uses a php page for processing so you can use a webserver to proxy requests outside your local network. 
+
+See arduino_lamp.ino, farbtastic.js, and process.php for options you need to change. 
+
+
+All files by other authors retain their original licences. 
+
