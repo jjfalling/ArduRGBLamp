@@ -6,6 +6,10 @@ http://www.open-electronics.org/arduino-wifi-rgb-lamp-ikea-dudero-modding/
  
 Using a web interface with an ajax color picker to send the desired color codes to the arduino
 Web interface is based on farbtastic. Also see process.pl for a few lines you might need to modifiy. 
+I also disabled writing to the eeprom.
+
+if you send inv=1 in the url then it will invert the lamp state. This is meant for controling with a Pebble watch/tasker. 
+
 
  */
 
@@ -22,6 +26,7 @@ int buttonPin = 4; // digital pin going to human touch sensor. this is used to t
 int r=50; int g=100; int b=150;
 int rup; int gup; int bup;
 int fader=0;
+int inverse=0;
 int inc=10;
 String inString = String(50);
 char buffer[160]; // make sure this is large enough for the largest string it must hold
@@ -127,6 +132,7 @@ void loop()  {
                 int Pos_b = inString.indexOf("b");
                 int Pos_i = inString.indexOf("inc");
                 int Pos_f = inString.indexOf("fad");
+                int Pos_v = inString.indexOf("inv");
                 int End = inString.indexOf("HTTP");
                 Serial.print("Pos_r: ");
                 Serial.println(Pos_r);
@@ -138,6 +144,8 @@ void loop()  {
                 Serial.println(Pos_i);
                 Serial.print("Pos_f: ");
                 Serial.println(Pos_f);
+                Serial.print("Pos_v: ");
+                Serial.println(Pos_v);
                 Serial.print("End: ");
                 Serial.println(End);
 
@@ -147,7 +155,7 @@ void loop()  {
                    r=(atoi(colorArr));
                    Serial.print("red: ");
                    Serial.println(r);
-                   EEPROM.write(1, r);
+                   //EEPROM.write(1, r);
                 }
                 if(Pos_g>=0){
                    temp=inString.substring((Pos_g+2), (Pos_b-1));
@@ -155,7 +163,7 @@ void loop()  {
                    g=(atoi(colorArr));
                    Serial.print("green: ");
                    Serial.println(g);
-                   EEPROM.write(2, g);
+                   //EEPROM.write(2, g);
                 }         
 
                 if(Pos_b>=0){
@@ -164,7 +172,7 @@ void loop()  {
                    b=(atoi(colorArr));
                    Serial.print("blue: ");
                    Serial.println(b);
-                   EEPROM.write(3, b);
+                   //EEPROM.write(3, b);
                 }      
 
                 if(Pos_i>=0){
@@ -173,7 +181,7 @@ void loop()  {
                    inc=(atoi(colorArr));
                    Serial.print("inc: ");
                    Serial.println(inc);
-                   EEPROM.write(4, inc);
+                   //EEPROM.write(4, inc);
                 } 
 
                 if(Pos_f>=0){
@@ -182,8 +190,46 @@ void loop()  {
                    fader=(atoi(colorArr));
                    Serial.print("fader: ");
                    Serial.println(fader);
-                   EEPROM.write(5, fader);
-                }     
+                   //EEPROM.write(5, fader);
+                }
+                if(Pos_v>=0){
+                  
+                   temp=inString.substring((Pos_v+4), (End-1));
+                   temp.toCharArray(colorArr, 5);
+                   inverse=(atoi(colorArr));
+                   Serial.print("inverse: ");
+                   Serial.println(inverse);
+                   
+                   if(inverse=1){
+                    
+                    //check if current status if on or off, update status var
+                    if (r<255) onOffState=1;
+                    else if (g<255) onOffState=1;
+                    else if (b<255) onOffState=1;
+                    
+                    if (r==255) onOffState=0;
+                    else if (g==255) onOffState=0;
+                    else if (b==255) onOffState=0;
+              
+                    //check the current state, make it the opposite
+                    if (onOffState==0) {
+                      onOffState=1;
+                      r=0;
+                      b=0;
+                      g=0;
+                    }
+                    else if (onOffState==1) {
+                      onOffState=0;
+                      r=255;
+                      b=255;
+                      g=255;
+                    }
+                    
+                      analogWrite(red, r);
+                      analogWrite(green, g);
+                      analogWrite(blue, b);;
+                  } 
+                } 
 
                if ((Pos_r>=0)&&(Pos_g>=0)&&(Pos_b>=0)) {
                  rgb(r,g,b);
